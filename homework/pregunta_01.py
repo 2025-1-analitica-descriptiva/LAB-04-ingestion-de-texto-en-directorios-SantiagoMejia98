@@ -4,7 +4,10 @@
 """
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
-
+import zipfile
+import os
+import glob
+import pandas as pd
 
 def pregunta_01():
     """
@@ -71,3 +74,45 @@ def pregunta_01():
 
 
     """
+    with zipfile.ZipFile("files/input.zip", 'r') as zip:
+        zip.extractall("files")
+
+    ruta_base = 'files/input'
+    ruta_final = 'files/output'
+
+    train_dataset = {
+        'phrase' : [],
+        'target' : []
+        }
+    test_dataset = {
+        'phrase' : [],
+        'target' : []
+        }
+    
+    if os.path.exists(ruta_final):
+        for file in glob.glob(f"{ruta_final}/*"):
+            os.remove(file)
+        os.rmdir(ruta_final)
+    os.makedirs(ruta_final)  
+
+    files = glob.glob(f"{ruta_base}/**/*", recursive=True)
+    files = [f for f in files if os.path.isfile(f)]
+    for file in files:
+        etiqueta = os.path.basename(os.path.dirname(file))
+        conjunto = os.path.basename(os.path.dirname(os.path.dirname(file)))
+        with open(file, 'r', encoding="utf-8") as f:
+            for linea in f:
+                frase = linea.strip()
+        if conjunto == "train":
+            train_dataset["phrase"].append(frase)
+            train_dataset["target"].append(etiqueta)
+        else:
+            test_dataset["phrase"].append(frase)
+            test_dataset["target"].append(etiqueta)
+
+    df_train = pd.DataFrame(train_dataset)
+    df_test = pd.DataFrame(test_dataset)
+    df_train.to_csv(os.path.join(ruta_final, "train_dataset.csv"), index=False, encoding="utf-8")
+    df_test.to_csv(os.path.join(ruta_final, "test_dataset.csv"), index=False, encoding="utf-8")
+    
+pregunta_01()
